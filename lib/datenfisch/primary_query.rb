@@ -20,8 +20,10 @@ module Datenfisch
       PrimaryQuery.new @provider, @query.where(*args, **hash)
     end
 
-    def group(field)
-      PrimaryQuery.new @provider, @query.select(field).group(field)
+    def group(field_name)
+      field = @provider.model.arel_table[field_name]
+      aliased_field = Arel::Nodes::As.new field, field_name
+      PrimaryQuery.new @provider, @query.select(aliased_field).group(field)
     end
 
     def relation_table rel_name

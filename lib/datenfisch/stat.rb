@@ -58,11 +58,16 @@ module Datenfisch
     end
 
     def node
-      @provider.table[@name]
+      coalesce @provider.table[@name], 0
     end
 
     def dependencies
       Set.new.add self
+    end
+
+    # Todo: Do not use 0 as hardcoded default.
+    def coalesce *nodes
+      Arel::Nodes::NamedFunction.new 'COALESCE', nodes
     end
 
   end

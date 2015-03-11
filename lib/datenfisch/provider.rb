@@ -19,18 +19,13 @@ module Datenfisch
       end
 
       def sum attribute
-        sum = Arel::Nodes::Sum.new [self.model.arel_table[attribute]]
-        coalesce sum, 0
+        Arel::Nodes::Sum.new [self.model.arel_table[attribute]]
       end
 
       def count
-        count = self.model.arel_table[Arel.star].count
-        coalesce count, 0
+        Arel::Nodes::Count.new [self.model.arel_table[Arel.star]]
       end
 
-      def coalesce *nodes
-        Arel::Nodes::NamedFunction.new 'COALESCE', nodes
-      end
     end
 
     def initialize model
