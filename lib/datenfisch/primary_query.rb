@@ -97,8 +97,11 @@ module Datenfisch
     end
 
     def join other
-      @ast = ast.join other.arel, Arel::Nodes::OuterJoin
-      @ast = @ast.on join_condition(other) if @join_attr
+      if @join_attr
+        @ast = ast.join(other.arel, Arel::Nodes::OuterJoin).on join_condition(other)
+      else
+        @ast = @ast.join(other.arel)
+      end
       self
     end
 
