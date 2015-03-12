@@ -47,8 +47,8 @@ module Datenfisch
       run
     end
 
-    def each
-      to_a.each
+    def each &block
+      to_a.each(&block)
     end
 
     def to_sql

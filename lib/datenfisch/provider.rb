@@ -23,7 +23,7 @@ module Datenfisch
       end
 
       def count
-        Arel::Nodes::Count.new [self.model.arel_table[Arel.star]]
+        Arel::Nodes::Count.new [Arel.star]
       end
 
     end

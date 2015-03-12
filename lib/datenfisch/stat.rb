@@ -1,4 +1,3 @@
-require 'delegate'
 module Datenfisch
 
   class Stat
@@ -37,14 +36,24 @@ module Datenfisch
 
   end
 
-  class AliasedStat < SimpleDelegator
+  class AliasedStat < Stat
+    attr_reader :name
+
     def initialize name, stat
-      super(stat)
+      @aliased = stat
       @name = name
+    end
+
+    def node
+      @aliased.node
     end
 
     def named_node
       Arel::Nodes::As.new(node, @name)
+    end
+
+    def dependencies
+      @aliased.dependencies
     end
   end
 
