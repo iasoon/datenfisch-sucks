@@ -21,7 +21,10 @@ module Datenfisch
       if ordering.last.is_a? Hash
         unhashed = ordering.pop.map do |k,v|
           if [:desc, :DESC, 'desc', 'DESC'].include? v
-            Arel::Nodes::Descending.new k
+            # This should be an attribute identifier, not a literal string.
+            # Arel does not support attributes without a table ( Or I'm just
+            # plain silly)
+            Arel::Nodes::Descending.new Arel.sql('"' + k.to_s + '"')
           else
             k
           end
