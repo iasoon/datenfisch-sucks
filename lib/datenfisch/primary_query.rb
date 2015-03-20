@@ -70,7 +70,7 @@ module Datenfisch
     def initialize model, rel_name
       @model = model
       @relation = model.reflections[rel_name]
-      @table = @relation.klass.arel_table
+      @table = @relation.klass.arel_table.clone
       @table.table_alias = rel_name.to_s.concat("_top4")
     end
 
