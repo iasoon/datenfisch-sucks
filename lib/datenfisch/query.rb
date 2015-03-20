@@ -1,5 +1,6 @@
 require 'datenfisch/primary_query.rb'
 require 'datenfisch/query_modifiers.rb'
+require 'datenfisch/model.rb'
 module Datenfisch
 
   def self.query
@@ -23,9 +24,7 @@ module Datenfisch
 
     def run
       res = run_query
-      # If a statted model is available, use it!
-      statted_model = get_model.try(:const_get, "Statted")
-      res.map! { |row| statted_model.new row } if statted_model
+      res.map! { |row| StattedRecord.new get_model, row } if get_model
       res
     end
 

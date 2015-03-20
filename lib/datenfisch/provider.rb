@@ -14,7 +14,7 @@ module Datenfisch
         create_stat name, node
       end
 
-      def attr name, target, through: nil
+      def attr name, target=name, through: nil
         self.attributes[name] = Attribute.new target, through: through
       end
 

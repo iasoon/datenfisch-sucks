@@ -33,51 +33,41 @@ module Datenfisch
 
     def self.extended model
       model.const_set "DatenfischStats", {}
-      statted_model model
-    end
-
-    def self.statted_model model
-      klass = Class.new SimpleDelegator do
-        include Stats
-        const_set "Model", model
-
-        def initialize params
-          @obj = self.class.const_get("Model").new select_attributes(params)
-          super @obj
-
-          @stats = select_stats params
-          @stats.each do |name, value|
-            add_stat name, value
-          end
-        end
-
-      end
-      model.const_set "Statted", klass
-    end
-
-    module Stats
-
-      def add_stat name, value
-        define_singleton_method name do
-          value
-        end
-      end
-
-      private
-
-      def select_attributes params
-        params.select {|k,v| is_attribute? k}
-      end
-
-      def select_stats params
-        params.reject {|k,v| is_attribute? k}
-      end
-
-      def is_attribute? name
-        self.class.const_get("Model").column_names.include? name.to_s
-      end
     end
 
   end
 
+  class StattedRecord < SimpleDelegator
+
+    def initialize model, params
+      @model = model
+      @obj = @model.new select_attributes(params)
+      super @obj
+
+      @stats = select_stats params
+      @stats.each do |name, value|
+        add_stat name, value
+      end
+    end
+
+    def add_stat name, value
+      define_singleton_method name do
+        value
+      end
+    end
+
+    private
+
+    def select_attributes params
+      params.select {|k,v| is_attribute? k}
+    end
+
+    def select_stats params
+      params.reject {|k,v| is_attribute? k}
+    end
+
+    def is_attribute? name
+      @model.column_names.include? name.to_s
+    end
+  end
 end
