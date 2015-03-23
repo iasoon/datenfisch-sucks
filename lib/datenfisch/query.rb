@@ -1,6 +1,7 @@
-require 'datenfisch/primary_query.rb'
-require 'datenfisch/query_modifiers.rb'
-require 'datenfisch/model.rb'
+require 'datenfisch/primary_query'
+require 'datenfisch/query_modifiers'
+require 'datenfisch/model'
+require 'datenfisch/statted_model'
 module Datenfisch
 
   def self.query
@@ -24,7 +25,12 @@ module Datenfisch
 
     def run
       res = run_query
-      res.map! { |row| StattedRecord.new get_model, row } if get_model
+      klass = get_model
+      if klass
+        # this seems a little hacky
+        klass.extend Statted if not klass.is_a? Statted
+        res.map! { |row| klass.instantiate_with_stats row }
+      end
       res
     end
 

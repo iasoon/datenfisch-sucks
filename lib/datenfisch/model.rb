@@ -36,38 +36,4 @@ module Datenfisch
     end
 
   end
-
-  class StattedRecord < SimpleDelegator
-
-    def initialize model, params
-      @model = model
-      @obj = @model.new select_attributes(params)
-      super @obj
-
-      @stats = select_stats params
-      @stats.each do |name, value|
-        add_stat name, value
-      end
-    end
-
-    def add_stat name, value
-      define_singleton_method name do
-        value
-      end
-    end
-
-    private
-
-    def select_attributes params
-      params.select {|k,v| is_attribute? k}
-    end
-
-    def select_stats params
-      params.reject {|k,v| is_attribute? k}
-    end
-
-    def is_attribute? name
-      @model.column_names.include? name.to_s
-    end
-  end
 end

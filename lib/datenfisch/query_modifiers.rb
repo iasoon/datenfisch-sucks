@@ -109,8 +109,7 @@ module Datenfisch
   class ModelModifier < QueryModifier
     def initialize modified, model
       super modified
-      # Make sure we have got an ActiveRecord::Relation here
-      @model = model.all
+      @model = model
     end
 
     def query_joiner

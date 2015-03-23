@@ -138,9 +138,10 @@ module Datenfisch
 
   class ModelJoiner < QueryJoiner
     def initialize model_query
-      @model_query = model_query
-      @ast = model_query.arel
-      @join_attr = model_query.name.downcase.concat('_id')
+      # Make sure we got a query here
+      @model_query = model_query.all
+      @ast = @model_query.arel
+      @join_attr = @model_query.name.downcase.concat('_id')
     end
 
     # This makes sense
