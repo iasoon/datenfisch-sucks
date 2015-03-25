@@ -48,9 +48,9 @@ module Datenfisch
 
     private
     def run_query
-      ActiveRecord::Base.connection.execute(to_sql).map do |row|
-        # Filter out positional arguments
-        row.select { |k,v| k.is_a? String }
+      resultset = ActiveRecord::Base.connection.execute(to_sql)
+      resultset.map do |res|
+        Hash[resultset.fields.zip res]
       end
     end
 

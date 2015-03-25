@@ -24,7 +24,7 @@ module Datenfisch
             # This should be an attribute identifier, not a literal string.
             # Arel does not support attributes without a table ( Or I'm just
             # plain silly)
-            Arel::Nodes::Descending.new Arel.sql('"' + k.to_s + '"')
+            Arel::Nodes::Descending.new Arel.sql(k.to_s)
           else
             k
           end
