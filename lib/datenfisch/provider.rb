@@ -32,8 +32,8 @@ module Datenfisch
         Arel::Nodes::NamedFunction.new 'LN', [to_node(arg)]
       end
 
-      def a name
-        self.model.arel_table[name]
+      def floor arg
+        Arel::Nodes::NamedFunction.new 'FLOOR', [to_node(arg)]
       end
 
       # typecasts
@@ -42,10 +42,14 @@ module Datenfisch
           [Arel::Nodes::As.new(to_node(arg), to_node(type))]
       end
 
+      def a name
+        self.model.arel_table[name]
+      end
+
       def to_node arg
         case arg
         when Symbol
-          arg
+          a arg
         when String
           Arel::Nodes::SqlLiteral.new arg
         else
