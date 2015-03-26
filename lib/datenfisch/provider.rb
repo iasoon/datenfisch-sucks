@@ -1,6 +1,7 @@
 require 'datenfisch/dsl'
 require 'datenfisch/stat'
 require 'datenfisch/query'
+require 'datenfisch/utils'
 
 module Datenfisch
 
@@ -18,14 +19,43 @@ module Datenfisch
         self.attributes[name] = Attribute.new target, through: through
       end
 
-      def sum attribute
-        Arel::Nodes::Sum.new [self.model.arel_table[attribute]]
+      def sum arg
+        Arel::Nodes::Sum.new [to_node(arg)]
       end
 
       def count
         Arel::Nodes::Count.new [Arel.star]
       end
 
+      # mysql functions
+      def ln arg
+        Arel::Nodes::NamedFunction.new 'LN', [to_node(arg)]
+      end
+
+      def a name
+        self.model.arel_table[name]
+      end
+
+      # typecasts
+      def cast arg, type
+        Arel::Nodes::NamedFunction.new 'CAST',
+          [Arel::Nodes::As.new(to_node(arg), to_node(type))]
+      end
+
+      def to_node arg
+        case arg
+        when Symbol
+          arg
+        when String
+          Arel::Nodes::SqlLiteral.new arg
+        else
+          if arg.is_a? Arel::Node
+            arg
+          else
+            throw "Cannot convert argument to node"
+          end
+        end
+      end
     end
 
     def initialize model
@@ -53,6 +83,7 @@ module Datenfisch
     def [] name
       @table[name]
     end
+
   end
 
   class Attribute
