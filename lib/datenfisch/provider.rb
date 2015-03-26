@@ -1,7 +1,6 @@
 require 'datenfisch/dsl'
 require 'datenfisch/stat'
 require 'datenfisch/query'
-require 'datenfisch/utils'
 
 module Datenfisch
 
