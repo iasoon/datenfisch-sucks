@@ -26,13 +26,25 @@ module Datenfisch
 
     end
 
-    # Convenience method. Provide stat names instead of stat objects.
-    def with_stats *stats
-      Datenfisch::query.model(self).select(*stats.map { |name| send(name) })
-    end
 
     def self.extended model
       model.const_set "DatenfischStats", {}
+    end
+
+    # Convenience method. Provide stat names instead of stat objects.
+    def with_stats *stats
+      include_stats stats
+    end
+
+    def only_with_stats *stats
+      include_stats stats, inner_join: true
+    end
+
+    private
+    def include_stats stats, **opts
+      Datenfisch::query.model(self, **opts).select(
+        *stats.map { |name| send(name) }
+      )
     end
 
   end

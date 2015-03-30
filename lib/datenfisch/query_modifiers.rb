@@ -13,8 +13,13 @@ module Datenfisch
       GroupModifier.new self, field
     end
 
-    def model(model)
-      ModelModifier.new self, model
+    def model(model, inner_join: false)
+      if inner_join
+        join_type = Arel::Nodes::InnerJoin
+      else
+        join_type = Arel::Nodes::OuterJoin
+      end
+      ModelModifier.new self, model, join_type
     end
 
     def order(*ordering)
@@ -107,13 +112,14 @@ module Datenfisch
   end
 
   class ModelModifier < QueryModifier
-    def initialize modified, model
+    def initialize modified, model, join_type
       super modified
       @model = model
+      @join_type = join_type
     end
 
     def query_joiner
-      ModelJoiner.new @model
+      ModelJoiner.new @model, @join_type
     end
 
     def get_model

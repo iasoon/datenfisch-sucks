@@ -96,9 +96,9 @@ module Datenfisch
       self
     end
 
-    def join other
+    def join other, join_type = Arel::Nodes::OuterJoin
       if @join_attr
-        @ast = ast.join(other.arel, Arel::Nodes::OuterJoin).on join_condition(other)
+        @ast = ast.join(other.arel, join_type).on join_condition(other)
       else
         @ast = @ast.join(other.arel)
       end
@@ -137,16 +137,16 @@ module Datenfisch
   end
 
   class ModelJoiner < QueryJoiner
-    def initialize model_query
+    def initialize model_query, join_type
       # Make sure we got a query here
       @model_query = model_query.all
       @ast = @model_query.arel
+      @join_type = join_type
       @join_attr = @model_query.name.downcase.concat('_id')
     end
 
-    # This makes sense
     def join_first_table table
-      join table
+      join table, @join_type
     end
 
     def base_join_attr
