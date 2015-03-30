@@ -1,109 +1,154 @@
 module Datenfisch
 
-  class Stat
+  module Stats
 
-    def as name
-      AliasedStat.new name, self
-    end
+    class Stat
 
-    private
-    def self.define_combinator name, &combination_proc
-      define_method name do |other|
-        if other.is_a? Stat
-          newnode = combination_proc.call node, other.node
-          newdeps = dependencies | other.dependencies
-        else
-          newnode = combination_proc.call node, other
-          newdeps = dependencies
-        end
-        AnonymousStat.new newnode, newdeps
+      def as name
+        NamedStat.new name, self
+      end
+
+      # basic arithmetic
+      def + other
+        Addition.new self, other
+      end
+
+      def - other
+        Subtraction.new self, other
+      end
+
+      def * other
+        Multiplication.new self, other
+      end
+
+      def / other
+        Division.new self, other
+      end
+
+      private
+      def to_stat arg
+        arg = Constant.new arg if not arg.is_a? Stat
+        arg
       end
     end
 
-    # basic arithmetic
-    define_combinator :+ do |l,r| Arel::Nodes::Addition.new l, r end
-    define_combinator :- do |l,r| Arel::Nodes::Subtraciton.new l, r end
-    define_combinator :* do |l,r| Arel::Nodes::Multiplication.new l, r end
-    define_combinator :/ do |l,r| Arel::Nodes::Division.new l, r end
+    class NamedStat < Stat
+      attr_reader :name
 
+      def initialize name, stat
+        @name = name
+        @stat = stat
+      end
+
+      def named_node
+        Arel::Nodes::As.new(node, @name)
+      end
+
+      def node
+        @stat.node
+      end
+
+      def dependencies
+        @stat.dependencies
+      end
+    end
+
+    class PrimaryStat < Stat
+
+      attr_reader :name, :provider, :primary_node
+
+      def initialize name, primary_node, provider
+        @name = name
+        @primary_node = primary_node.as(@name.to_s)
+        @provider = provider
+      end
+
+      # Todo: Do not use 0 as hardcoded default.
+      def node
+        coalesce @provider.table[@name], 0
+      end
+
+      def named_node
+        Arel::Nodes::As.new(node, @name)
+      end
+
+      def dependencies
+        Set.new.add self
+      end
+
+      def coalesce *nodes
+        Arel::Nodes::NamedFunction.new 'COALESCE', nodes
+      end
+    end
+
+
+    class Constant < Stat
+      def initialize value
+        @value = value
+      end
+
+      def node
+        Arel.sql(@value.to_s)
+      end
+
+      def dependencies
+        Set.new
+      end
+    end
+
+    class Volatile < Stat
+      def initialize &block
+        @proc = Proc.new(&block)
+      end
+
+      def node
+        Arel.sql(@proc.call.to_s)
+      end
+
+      def dependencies
+        Set.new
+      end
+    end
+
+    class BinaryCombinator < Stat
+      def initialize left, right
+        @left = to_stat left
+        @right = to_stat right
+      end
+
+      def dependencies
+        @left.dependencies + @right.dependencies
+      end
+    end
+
+    # Arithmetic
+    class Addition < BinaryCombinator
+      def node
+        Arel::Nodes::Addition.new @left.node, @right.node
+      end
+    end
+
+    class Subtraction < BinaryCombinator
+      def node
+        Arel::Nodes::Subtraction.new @left.node, @right.node
+      end
+    end
+
+    class Multiplication < BinaryCombinator
+      def node
+        Arel::Nodes::Multiplication.new @left.node, @right.node
+      end
+    end
+
+    class Division < BinaryCombinator
+      def node
+        Arel::Nodes::Division.new @left.node, @right.node
+      end
+    end
   end
 
-  class NamedStat < Stat
-
-    def named_node
-      Arel::Nodes::As.new(node, @name)
-    end
-
+  # Helper methods
+  def self.volatile &block
+    Stats::Volatile.new(&block)
   end
-
-  class AliasedStat < Stat
-    attr_reader :name
-
-    def initialize name, stat
-      @aliased = stat
-      @name = name
-    end
-
-    def node
-      @aliased.node
-    end
-
-    def named_node
-      Arel::Nodes::As.new(node, @name)
-    end
-
-    def dependencies
-      @aliased.dependencies
-    end
-  end
-
-  class PrimaryStat < NamedStat
-    attr_reader :name, :provider, :primary_node
-
-    def initialize name, primary_node, provider
-      @name = name
-      @primary_node = primary_node.as(@name.to_s)
-      @provider = provider
-    end
-
-    def node
-      coalesce @provider.table[@name], 0
-    end
-
-    def dependencies
-      Set.new.add self
-    end
-
-    # Todo: Do not use 0 as hardcoded default.
-    def coalesce *nodes
-      Arel::Nodes::NamedFunction.new 'COALESCE', nodes
-    end
-
-  end
-
-  class SecondaryStat < NamedStat
-    attr_reader :name, :node, :dependencies
-
-    def initialize name, node, depends
-      @name = name
-      @node = node
-      @dependencies = depends.to_set
-    end
-
-  end
-
-  class AnonymousStat < Stat
-    attr_reader :node, :dependencies
-
-    def initialize node, depends
-      @node = node
-      @dependencies = depends.to_set
-    end
-
-    def name name
-      SecondaryStat.new name, node, dependencies
-    end
-    alias_method :as, :name
-  end
-
 end

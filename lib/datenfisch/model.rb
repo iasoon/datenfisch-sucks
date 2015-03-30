@@ -9,10 +9,13 @@ module Datenfisch
       # Add stat to hash
       self.const_get("DatenfischStats")[name.to_sym] = stat
 
+      # fixate class
+      model_id = self.name.downcase.concat('_id')
+
       # Define stat getter
       define_method name do |*args, **named_args|
         query = Datenfisch::query.select(stat)
-          .where(self.class.name.downcase.concat('_id') => id)
+          .where(model_id => id)
           .where(*args, **named_args)
 
         # Extract result
@@ -46,6 +49,5 @@ module Datenfisch
         *stats.map { |name| send(name) }
       )
     end
-
   end
 end

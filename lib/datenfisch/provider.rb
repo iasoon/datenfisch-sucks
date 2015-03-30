@@ -68,7 +68,7 @@ module Datenfisch
     end
 
     def create_stat name, node
-      stat = PrimaryStat.new name, node, self
+      stat = Stats::PrimaryStat.new name, node, self
       define_singleton_method name do
         stat
       end
