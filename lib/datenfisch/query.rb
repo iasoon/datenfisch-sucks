@@ -1,7 +1,6 @@
 require 'datenfisch/primary_query'
 require 'datenfisch/query_modifiers'
 require 'datenfisch/model'
-require 'datenfisch/statted_model'
 module Datenfisch
 
   def self.query
@@ -24,14 +23,13 @@ module Datenfisch
     end
 
     def run
-      res = run_query
-      klass = get_model
-      if klass
-        # this seems a little hacky
-        klass.extend Statted if not klass.is_a? Statted
-        res.map! { |row| klass.instantiate_with_stats row }
+      model = get_model
+      if model
+        res = model.find_by_sql arel
+        # include relations
+        ActiveRecord::Associations::Preloader.new.preload(res, get_included)
+        res
       end
-      res
     end
 
     def to_a
@@ -45,15 +43,6 @@ module Datenfisch
     def to_sql
       arel.to_sql
     end
-
-    private
-    def run_query
-      resultset = ActiveRecord::Base.connection.execute(to_sql)
-      resultset.map do |res|
-        Hash[resultset.fields.zip res]
-      end
-    end
-
   end
 
   class BaseQuery < Query
@@ -71,6 +60,10 @@ module Datenfisch
     end
 
     def get_ordering
+      []
+    end
+
+    def get_included
       []
     end
 

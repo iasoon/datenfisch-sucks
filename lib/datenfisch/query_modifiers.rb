@@ -26,9 +26,6 @@ module Datenfisch
       if ordering.last.is_a? Hash
         unhashed = ordering.pop.map do |k,v|
           if [:desc, :DESC, 'desc', 'DESC'].include? v
-            # This should be an attribute identifier, not a literal string.
-            # Arel does not support attributes without a table ( Or I'm just
-            # plain silly)
             Arel::Nodes::Descending.new Arel.sql(k.to_s)
           else
             k
@@ -39,29 +36,31 @@ module Datenfisch
       OrderModifier.new self, ordering
     end
 
+    def includes(*relations)
+      IncludeModifier.new self, relations
+    end
+
   end
 
   class QueryModifier < Query
+    def self.pass_method name
+      define_method name do
+        @modified.send name
+      end
+    end
+
+    def self.pass_methods *names
+      names.each do |name|
+        pass_method name
+      end
+    end
 
     def initialize modified
       @modified = modified
     end
 
-    def query_joiner
-      @modified.query_joiner
-    end
-
-    def stats
-      @modified.stats
-    end
-
-    def get_model
-      @modified.get_model
-    end
-
-    def get_ordering
-      @modified.get_ordering
-    end
+    pass_methods :query_joiner, :stats, :get_model, :get_ordering,
+      :get_included
 
     def subqueries_for stats
       @modified.subqueries_for stats
@@ -141,6 +140,17 @@ module Datenfisch
 
     def get_ordering
       @modified.get_ordering.concat @ordering
+    end
+  end
+
+  class IncludeModifier < QueryModifier
+    def initialize modified, included
+      super modified
+      @included = included
+    end
+
+    def get_included
+      @modified.get_included + @included
     end
   end
 end

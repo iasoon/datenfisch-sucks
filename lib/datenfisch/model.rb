@@ -7,20 +7,20 @@ module Datenfisch
       stat = stat.as name
 
       # Add stat to hash
-      self.const_get("DatenfischStats")[name.to_sym] = stat
+      self.const_get("Stats")[name.to_sym] = stat
 
       # fixate class
-      model_id = self.name.downcase.concat('_id')
+      #model_id = self.name.downcase.concat('_id')
 
       # Define stat getter
-      define_method name do |*args, **named_args|
-        query = Datenfisch::query.select(stat)
-          .where(model_id => id)
-          .where(*args, **named_args)
+      #define_method name do |*args, **named_args|
+        #query = Datenfisch::query.select(stat)
+          #.where(model_id => id)
+          #.where(*args, **named_args)
 
-        # Extract result
-        query.run.first[stat.name.to_s]
-      end
+        ## Extract result
+        #query.run.first[stat.name.to_s]
+      #end
 
       # Define getter for stat object
       define_singleton_method name do
@@ -31,7 +31,7 @@ module Datenfisch
 
 
     def self.extended model
-      model.const_set "DatenfischStats", {}
+      model.const_set "Stats", {}
     end
 
     # Convenience method. Provide stat names instead of stat objects.
@@ -45,8 +45,9 @@ module Datenfisch
 
     private
     def include_stats stats, **opts
+      statmap = self.const_get "Stats"
       Datenfisch::query.model(self, **opts).select(
-        *stats.map { |name| send(name) }
+        *stats.map { |name| statmap[name] }
       )
     end
   end
