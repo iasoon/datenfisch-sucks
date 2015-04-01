@@ -34,21 +34,10 @@ module Datenfisch
       model.const_set "Stats", {}
     end
 
-    # Convenience method. Provide stat names instead of stat objects.
-    def with_stats *stats
-      include_stats stats
+    def statted
+      self.all.extending QueryMethods
     end
 
-    def only_with_stats *stats
-      include_stats stats, inner_join: true
-    end
-
-    private
-    def include_stats stats, **opts
-      statmap = self.const_get "Stats"
-      Datenfisch::query.model(self, **opts).select(
-        *stats.map { |name| statmap[name] }
-      )
-    end
+    delegate :with_stats, :only_with_stats, to: :statted
   end
 end
