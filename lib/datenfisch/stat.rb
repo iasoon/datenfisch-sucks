@@ -25,6 +25,12 @@ module Datenfisch
         Division.new self, other
       end
 
+      def get *args, **named_args
+        query = Datenfisch.query.select(self).where(*args, **named_args)
+        res = ActiveRecord::Base.connection.execute(query.to_sql)
+        res.first.first
+      end
+
       private
       def to_stat arg
         arg = Constant.new arg if not arg.is_a? Stat

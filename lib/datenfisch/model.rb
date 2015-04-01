@@ -9,18 +9,12 @@ module Datenfisch
       # Add stat to hash
       self.const_get("Stats")[name.to_sym] = stat
 
-      # fixate class
-      #model_id = self.name.downcase.concat('_id')
-
       # Define stat getter
-      #define_method name do |*args, **named_args|
-        #query = Datenfisch::query.select(stat)
-          #.where(model_id => id)
-          #.where(*args, **named_args)
-
-        ## Extract result
-        #query.run.first[stat.name.to_s]
-      #end
+      define_method name do |*args, **named_args|
+        attributes[name.to_s] || stat.get(
+          self.class.name.downcase.concat('_id') => self
+        )
+      end
 
       # Define getter for stat object
       define_singleton_method name do
