@@ -65,6 +65,10 @@ module Datenfisch
         Arel::Nodes::NamedFunction.new 'CAST',
           [Arel::Nodes::As.new(@arg.node, Arel::SqlLiteral.new(@type))]
       end
+
+      def dependencies
+        @arg.dependencies
+      end
     end
 
     class Logarithm < UnaryFunction

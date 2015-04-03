@@ -10,6 +10,8 @@ module Datenfisch
     attr_reader :attributes, :stats, :table, :model
 
     dsl do
+      include Nodes::Helpers
+
       def stat name, node
         name = name.to_sym
         create_stat name, node
@@ -19,23 +21,12 @@ module Datenfisch
         self.attributes[name] = Attribute.new target, through: through
       end
 
-      include Nodes::Helpers
+      def col name
+        Nodes::Column.new self.model.arel_table, name
+      end
 
       def count
         Nodes::Literal.new('*').count
-      end
-
-      def method_missing method_name, *args, &block
-        if model.column_names.include? method_name.to_s
-          Nodes::Column.new model.arel_table, method_name
-        else
-          super method_name, *args, &block
-        end
-      end
-
-      private
-      def model
-        __getobj__.model
       end
     end
 
