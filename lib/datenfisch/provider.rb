@@ -1,5 +1,6 @@
 require 'datenfisch/dsl'
 require 'datenfisch/stat'
+require 'datenfisch/nodes'
 require 'datenfisch/query'
 
 module Datenfisch
@@ -18,46 +19,23 @@ module Datenfisch
         self.attributes[name] = Attribute.new target, through: through
       end
 
-      def sum arg
-        Arel::Nodes::Sum.new [to_node(arg)]
-      end
+      include Nodes::Helpers
 
       def count
-        Arel::Nodes::Count.new [Arel.star]
+        Nodes::Literal.new('*').count
       end
 
-      # mysql functions
-      def ln arg
-        Arel::Nodes::NamedFunction.new 'LN', [to_node(arg)]
-      end
-
-      def floor arg
-        Arel::Nodes::NamedFunction.new 'FLOOR', [to_node(arg)]
-      end
-
-      # typecasts
-      def cast arg, type
-        Arel::Nodes::NamedFunction.new 'CAST',
-          [Arel::Nodes::As.new(to_node(arg), to_node(type))]
-      end
-
-      def a name
-        self.model.arel_table[name]
-      end
-
-      def to_node arg
-        case arg
-        when Symbol
-          a arg
-        when String
-          Arel::Nodes::SqlLiteral.new arg
+      def method_missing method_name, *args, &block
+        if model.column_names.include? method_name.to_s
+          Nodes::Column.new model.arel_table, method_name
         else
-          if arg.is_a? Arel::Node
-            arg
-          else
-            throw "Cannot convert argument to node"
-          end
+          super method_name, *args, &block
         end
+      end
+
+      private
+      def model
+        __getobj__.model
       end
     end
 
@@ -68,7 +46,7 @@ module Datenfisch
     end
 
     def create_stat name, node
-      stat = Stats::PrimaryStat.new name, node, self
+      stat = Nodes::PrimaryStat.new name, node, self
       define_singleton_method name do
         stat
       end
@@ -86,6 +64,7 @@ module Datenfisch
     def [] name
       @table[name]
     end
+
 
   end
 
