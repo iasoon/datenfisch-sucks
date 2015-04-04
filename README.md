@@ -104,7 +104,7 @@ additional query methods.
 
 ## Completeness
 
-Datenfich currently forfills my own needs, but it is not very complete. If you
+Datenfich currently fulfills my own needs, but it is not very complete. If you
 wish to use this library but need an additional feature, do not hesitate to drop
 me an email. I will also happily accept pull requests.
 
