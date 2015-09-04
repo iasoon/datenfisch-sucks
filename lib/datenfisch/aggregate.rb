@@ -7,6 +7,10 @@ module Datenfisch
       @node = node
     end
 
+    def self.node node
+      Nodes::Aggregate.new self.new(node)
+    end
+
     def arel
       self.arel_node.as self.attr_name
     end
@@ -18,6 +22,10 @@ module Datenfisch
     # Generate an unique name for this node
     def attr_name
       'n' + self.hash.abs.to_s(36)
+    end
+
+    def where *conditions
+      self.class.node @node.where(*conditions)
     end
 
     def hash

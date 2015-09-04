@@ -1,4 +1,6 @@
 require 'datenfisch/aggregator'
+require 'datenfisch/utils'
+
 module Datenfisch
   module Nodes
     class Attribute
@@ -19,6 +21,10 @@ module Datenfisch
 
       def leaves
         [self]
+      end
+
+      def where *conditions
+        Attribute.new(@table.where(*conditions), @name)
       end
 
       def hash
@@ -60,6 +66,10 @@ module Datenfisch
         @aggregate.table
       end
 
+      def where *conditions
+        @aggregate.where(*conditions)
+      end
+
       def hash
         @aggregate.hash
       end
@@ -80,7 +90,7 @@ module Datenfisch
       # TODO: joins!
       set = AttributeSet.new @nodes
       table, attrs = set.first
-      Arel::SelectManager.new(ActiveRecord::Base)
+      Utils.query
         .from(table.arel_for(attrs))
         .project(@nodes.map(&:arel))
     end

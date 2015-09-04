@@ -1,6 +1,6 @@
 require 'datenfisch/nodes'
-
 require 'datenfisch/names'
+require 'datenfisch/utils'
 module Datenfisch
   module Tables
     class Base
@@ -8,8 +8,8 @@ module Datenfisch
         Nodes::Attribute.new self, name
       end
 
-      def hash
-        arel_table.hash
+      def name
+        Names.table(self)
       end
 
       def arel_for attributes
@@ -17,11 +17,16 @@ module Datenfisch
       end
 
       def arel_table
-        Arel::Table.new(Names.table(self))
+        Arel::Table.new(name)
       end
 
       def aggregate_table
         AggregateTable.new self
+      end
+
+      def where *constraints
+        # TODO make this method more intelligent
+        WhereTable.new(self, constraints)
       end
 
       def == other
@@ -43,6 +48,10 @@ module Datenfisch
       def arel
         arel_table
       end
+
+      def hash
+        @table.hash
+      end
     end
 
     class AggregateTable < Base
@@ -50,21 +59,42 @@ module Datenfisch
         @table = table
       end
 
-      def table_name
+      def name
         Names.aggregator(@table)
-      end
-
-      def arel_table
-        Arel::Table.new(table_name)
       end
 
       def arel_for attributes
         #TODO this is not quite right. Table.arel should not be called
         # (You can't aggregate aggregate tables right now)
-        Arel::SelectManager.new(ActiveRecord::Base)
+        Utils.query
           .from(@table.arel)
           .project(attributes.map {|a| a.aggregate.arel })
-          .as(table_name)
+          .as(name)
+      end
+
+      def hash
+        @table.hash
+      end
+    end
+
+    class WhereTable < Base
+      def initialize table, constraints
+        @table = table
+        @constraints = constraints
+      end
+
+      def hash
+        @table.hash ^ @constraints.hash
+      end
+
+      def arel
+        # TODO: support aggregate tables
+        # TODO: Do not use subqueries when unneeded
+        Utils.query
+          .from(@table.arel)
+          .project(Arel.star)
+          .where(@constraints)
+          .as(Names.table(self))
       end
     end
   end

@@ -1,4 +1,5 @@
 require 'datenfisch/tables'
+require 'datenfisch/utils'
 module Datenfisch
   # An aggregator aggregates aggregates.
   class Aggregator
@@ -15,7 +16,7 @@ module Datenfisch
     end
 
     def arel
-      Arel::SelectManager.new(ActiveRecord::Base)
+      Utils.query
         .from(@table.arel)
         .project(*@aggregates.map(&:arel))
         .as(Names.aggregator(@table))
