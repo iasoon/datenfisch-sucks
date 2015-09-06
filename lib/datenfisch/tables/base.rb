@@ -18,6 +18,10 @@ module Datenfisch
         Arel::Table.new(name)
       end
 
+      def subquery nodes
+        self.query(nodes).as(name)
+      end
+
       def == other
         self.class == other.class &&
           self.arel_table == other.arel_table

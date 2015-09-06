@@ -10,8 +10,8 @@ module Datenfisch
         @table
       end
 
-      def arel
-        arel_table
+      def query nodes
+        @table.project(nodes)
       end
 
       def hash

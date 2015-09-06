@@ -3,6 +3,7 @@ require 'datenfisch/utils'
 require 'datenfisch/names'
 module Datenfisch
   module Tables
+    # Wrapper for selecting aggregates
     class AggregateTable < Base
       def initialize table
         @table = table
@@ -12,13 +13,8 @@ module Datenfisch
         Names.aggregator(@table)
       end
 
-      def arel_for attributes
-        #TODO this is not quite right. Table.arel should not be called
-        # (You can't aggregate aggregate tables right now)
-        Utils.query
-          .from(@table.arel)
-          .project(attributes.map {|a| a.aggregate.arel })
-          .as(name)
+      def query nodes
+        @table.query(nodes.map {|n| n.aggregate.arel})
       end
 
       def hash

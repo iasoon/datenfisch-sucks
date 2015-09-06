@@ -27,6 +27,11 @@ module Datenfisch
         Attribute.new(@table.where(*conditions), @name)
       end
 
+      # TODO: have another look at this, it looks quirky.
+      def group node
+        Attribute.new(@table.group(node), @name)
+      end
+
       def hash
         @table.hash ^ @name.hash
       end
@@ -70,6 +75,10 @@ module Datenfisch
         @aggregate.where(*conditions)
       end
 
+      def group node
+        @aggregate.group node
+      end
+
       def hash
         @aggregate.hash
       end
@@ -91,7 +100,7 @@ module Datenfisch
       set = AttributeSet.new @nodes
       table, attrs = set.first
       Utils.query
-        .from(table.arel_for(attrs))
+        .from(table.subquery(attrs))
         .project(@nodes.map(&:arel))
     end
   end

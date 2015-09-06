@@ -28,6 +28,10 @@ module Datenfisch
       self.class.node @node.where(*conditions)
     end
 
+    def group node
+      self.class.node @node.group(node)
+    end
+
     def hash
       self.node.hash
     end

@@ -12,14 +12,8 @@ module Datenfisch
         @table.hash ^ @constraints.hash
       end
 
-      def arel
-        # TODO: support aggregate tables
-        # TODO: Do not use subqueries when unneeded
-        Utils.query
-          .from(@table.arel)
-          .project(Arel.star)
-          .where(@constraints)
-          .as(name)
+      def query nodes
+        @table.query(nodes).where(constraints)
       end
     end
 
