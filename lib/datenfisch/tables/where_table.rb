@@ -13,7 +13,7 @@ module Datenfisch
       end
 
       def query nodes
-        @table.query(nodes).where(constraints)
+        @table.query(nodes).where(@constraints)
       end
     end
 
